@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "com.urbanflow.payment.transaction",
+  "title": "PaymentTransactionEvent",
+  "description": "Evento publicado en Kafka topic 'payment.transaction' por unified-payment-ms al completar un cobro multimodal. Consumido por el regulatory_audit_ledger para trazabilidad de cambios tarifarios (MVP 4).",
+  "type": "object",
+  "required": ["transaction_id", "account_id", "amount", "currency", "transaction_type", "payment_method", "created_at"],
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID único de la transacción generado por PostgreSQL"
+    },
+    "account_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Cuenta de usuario debidamente cobrada o recargada"
+    },
+    "amount": {
+      "type": "number",
+      "multipleOf": 0.01,
+      "description": "Monto de la transacción en la moneda indicada (positivo=cobro, negativo=reembolso)"
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["USD", "BOB"],
+      "description": "Código ISO 4217 de la moneda"
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": ["CHARGE", "REFUND", "RECHARGE"],
+      "description": "Tipo de operación financiera"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": ["NFC_CARD", "MOBILE_APP", "QR_CODE"],
+      "description": "Modalidad de pago usada por el ciudadano"
+    },
+    "trip_id": {
+      "type": ["string", "null"],
+      "description": "Identificador del viaje multimodal asociado; null para recargas"
+    },
+    "modes_used": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["BUS", "METRO", "SCOOTER", "BICYCLE", "WALK"]
+      },
+      "description": "Modos de transporte combinados en el viaje cobrado"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp UTC ISO8601 del momento de la transacción"
+    }
+  }
+}

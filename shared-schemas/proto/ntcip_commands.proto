@@ -1,0 +1,44 @@
+// ntcip_commands.proto — Definiciones Protocol Buffers para comandos NTCIP de semáforos inteligentes.
+// Usado por traffic-light-bridge-ms como referencia del contrato binario.
+// El mensaje serializado DEBE ser < 256 bytes para compatibilidad con la red 4G celular privada de los semáforos (20 años de antigüedad).
+
+syntax = "proto3";
+
+package urbanflow.ntcip;
+
+option go_package = "github.com/urbanflow/traffic-light-bridge-ms/ntcip";
+
+// Comando de priorización de fase semafórica.
+// Se emite cuando un bus tiene retraso > 5 minutos o un vehículo de emergencia es detectado.
+message PriorityCommand {
+  // Identificador único del controlador de semáforo físico (2 bytes en binario UDP)
+  uint32 controller_id = 1;
+
+  // Tipo de comando NTCIP:
+  // 0x01 = Extensión de fase verde
+  // 0x02 = Forzar fase verde inmediata
+  // 0x03 = Solicitud de priorización de paso (estándar NTCIP 1202)
+  uint32 command_type = 2;
+
+  // ID de la fase semafórica a mantener o extender en verde
+  uint32 phase_to_extend = 3;
+
+  // Segundos adicionales de verde solicitados (máximo 30 según especificación NTCIP)
+  uint32 duration_seconds = 4;
+
+  // Identificador del bus o vehículo de emergencia que solicita la prioridad
+  string requesting_vehicle_id = 5;
+
+  // Checksum CRC-8 para validación de integridad en la red celular
+  uint32 checksum = 6;
+}
+
+// Respuesta del controlador de semáforo al comando recibido
+message PriorityCommandAck {
+  uint32 controller_id = 1;
+
+  // 0 = Aceptado, 1 = Rechazado (fase en conflicto), 2 = Error de checksum
+  uint32 status_code = 2;
+
+  string message = 3;
+}

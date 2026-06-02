@@ -1,0 +1,37 @@
+# deploy-routing.yml — CI/CD para routing-engine-ms (FastAPI/Python).
+# Ejecuta linter, tests y despliega en Render al hacer push a main.
+
+name: Deploy Routing Engine
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/routing-engine-ms/**"
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: services/routing-engine-ms
+        run: pip install -r requirements.txt
+
+      - name: Lint with ruff
+        working-directory: services/routing-engine-ms
+        run: pip install ruff && ruff check .
+
+      - name: Run tests
+        working-directory: services/routing-engine-ms
+        run: pytest
+
+      - name: Deploy to Render
+        # Trigger deploy hook de Render via webhook
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_ROUTING }}

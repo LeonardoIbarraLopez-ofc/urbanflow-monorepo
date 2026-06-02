@@ -1,0 +1,32 @@
+# deploy-telemetry.yml — CI/CD para telemetry-ingest-ms (Go).
+# Compila binario, ejecuta tests y despliega en Render al hacer push a main.
+
+name: Deploy Telemetry Ingest MS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/telemetry-ingest-ms/**"
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run tests
+        working-directory: services/telemetry-ingest-ms
+        run: go test ./...
+
+      - name: Build binary
+        working-directory: services/telemetry-ingest-ms
+        run: go build -o server ./cmd/server/main.go
+
+      - name: Deploy to Render
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_TELEMETRY }}

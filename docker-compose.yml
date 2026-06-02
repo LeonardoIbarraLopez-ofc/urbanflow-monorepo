@@ -1,0 +1,126 @@
+# docker-compose.yml — Orquestación local de desarrollo offline para UrbanFlow.
+# Levanta emuladores locales de Postgres, Redis y MongoDB.
+# Para apuntar a SaaS cloud (Supabase, Upstash, Atlas), cambiar las variables en .env.
+
+version: "3.9"
+
+services:
+  # --- Bases de datos locales para desarrollo sin cloud ---
+
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    # Postgres con extensión TimescaleDB para telemetría de series de tiempo
+    container_name: urbanflow_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-urbanflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-urbanflow_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-urbanflow}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U urbanflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    # Redis local para bloqueos distribuidos de reservas (SET NX PX)
+    container_name: urbanflow_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-urbanflow_dev}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    # MongoDB local para colección shared_devices (scooters/bicicletas)
+    container_name: urbanflow_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-urbanflow}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-urbanflow_dev}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Microservicios (comentar los que no se usan localmente) ---
+
+  telemetry-ingest-ms:
+    build: ./services/telemetry-ingest-ms
+    container_name: telemetry_ingest
+    env_file: ./services/telemetry-ingest-ms/.env
+    ports:
+      - "8081:8080"  # HTTP
+      - "9001:9001/udp"  # UDP para telemetría GPS directa
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  unified-payment-ms:
+    build: ./services/unified-payment-ms
+    container_name: unified_payment
+    env_file: ./services/unified-payment-ms/.env
+    ports:
+      - "3001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  routing-engine-ms:
+    build: ./services/routing-engine-ms
+    container_name: routing_engine
+    env_file: ./services/routing-engine-ms/.env
+    ports:
+      - "8000:8000"
+
+  traffic-light-bridge-ms:
+    build: ./services/traffic-light-bridge-ms
+    container_name: traffic_light_bridge
+    env_file: ./services/traffic-light-bridge-ms/.env
+    ports:
+      - "3002:3000"
+
+  shared-mobility-ms:
+    build: ./services/shared-mobility-ms
+    container_name: shared_mobility
+    env_file: ./services/shared-mobility-ms/.env
+    ports:
+      - "3003:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  congestion-predictor-ms:
+    build: ./services/congestion-predictor-ms
+    container_name: congestion_predictor
+    env_file: ./services/congestion-predictor-ms/.env
+    ports:
+      - "8001:8001"
+
+  notification-ms:
+    build: ./services/notification-ms
+    container_name: notification_ms
+    env_file: ./services/notification-ms/.env
+    ports:
+      - "3004:3000"
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongodb_data:

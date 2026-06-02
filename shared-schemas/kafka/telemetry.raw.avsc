@@ -1,0 +1,52 @@
+{
+  "type": "record",
+  "name": "TelemetryRawGps",
+  "namespace": "com.urbanflow.telemetry",
+  "doc": "Esquema Avro para eventos de telemetría GPS de buses y metros. Publicado en Kafka topic 'telemetry.raw.gps' cada 500ms por telemetry-ingest-ms. Consumido por congestion-predictor-ms.",
+  "fields": [
+    {
+      "name": "vehicle_id",
+      "type": "string",
+      "doc": "Identificador único del vehículo (bus o metro)"
+    },
+    {
+      "name": "route_id",
+      "type": "string",
+      "doc": "Identificador de la ruta o línea asignada al vehículo"
+    },
+    {
+      "name": "latitude",
+      "type": "double",
+      "doc": "Latitud GPS en grados decimales (WGS84)"
+    },
+    {
+      "name": "longitude",
+      "type": "double",
+      "doc": "Longitud GPS en grados decimales (WGS84)"
+    },
+    {
+      "name": "speed_kmh",
+      "type": "float",
+      "doc": "Velocidad instantánea del vehículo en km/h"
+    },
+    {
+      "name": "bearing",
+      "type": "int",
+      "doc": "Dirección de desplazamiento en grados (0-359, norte=0)"
+    },
+    {
+      "name": "recorded_at",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Timestamp UTC en milisegundos del momento de captura del GPS"
+    },
+    {
+      "name": "delay_minutes",
+      "type": ["null", "float"],
+      "default": null,
+      "doc": "Minutos de retraso respecto al horario programado; null si está puntual"
+    }
+  ]
+}

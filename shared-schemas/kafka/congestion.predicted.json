@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "com.urbanflow.congestion.predicted",
+  "title": "CongestionPredictedEvent",
+  "description": "Evento publicado en Kafka topic 'traffic.congestion.predicted' por congestion-predictor-ms cuando la densidad predicha D(t+30) supera el umbral del 85%. Consumido por routing-engine-ms y notification-ms para re-enrutamiento y alertas.",
+  "type": "object",
+  "required": ["event_id", "corridor_id", "predicted_density", "prediction_horizon_minutes", "threshold_exceeded", "published_at"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único del evento de predicción"
+    },
+    "corridor_id": {
+      "type": "string",
+      "description": "Identificador del corredor vial o segmento afectado"
+    },
+    "predicted_density": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Densidad de tráfico predicha en t+30min (0.0 a 1.0; >0.85 = crítico)"
+    },
+    "prediction_horizon_minutes": {
+      "type": "integer",
+      "enum": [30],
+      "description": "Horizonte de predicción en minutos (siempre 30 según RNF)"
+    },
+    "threshold_exceeded": {
+      "type": "boolean",
+      "description": "True si predicted_density supera el umbral crítico del 85%"
+    },
+    "affected_routes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Lista de route_ids de buses que circulan por el corredor afectado"
+    },
+    "bounding_box": {
+      "type": "object",
+      "description": "Área geográfica aproximada del cuello de botella predicho",
+      "properties": {
+        "lat_min": { "type": "number" },
+        "lat_max": { "type": "number" },
+        "lon_min": { "type": "number" },
+        "lon_max": { "type": "number" }
+      }
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp UTC ISO8601 de publicación del evento"
+    }
+  }
+}

@@ -6,11 +6,8 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Copiar módulos primero para aprovechar caché de capas Docker
-COPY go.mod go.sum ./
-RUN go mod download
-
 COPY . .
+RUN go mod tidy
 
 # Compilar binario estático sin dependencias externas
 RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/server/main.go

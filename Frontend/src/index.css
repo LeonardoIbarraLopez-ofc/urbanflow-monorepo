@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Archivo", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #f6f3eb; /* Retro cream background */
+  --color-border-heavy: #111111;
+  
+  --color-primary-base: #0F172A;
+  --color-accent-green: #22C55E;
+  --color-accent-amber: #F59E0B;
+  --color-accent-red: #EF4444;
+  --color-accent-blue: #3B82F6;
+  --color-accent-purple: #8B5CF6;
+
+  /* Custom shadows for neo-brutalism */
+  --shadow-retro: 4px 4px 0px 0px rgba(0,0,0,1);
+  --shadow-retro-hover: 2px 2px 0px 0px rgba(0,0,0,1);
+  --shadow-retro-lg: 8px 8px 0px 0px rgba(0,0,0,1);
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-gray-900 font-sans min-h-screen overflow-hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-tight text-gray-900;
+  }
+}
+
+/* Leaflet map overrides to match aesthetic */
+.leaflet-container {
+  @apply font-sans;
+  background: #e5e0d8 !important; /* Slightly darker cream for map bg */
+}
+
+/* Utility classes for neo-brutalism components */
+@layer utilities {
+  .retro-card {
+    @apply bg-white border-2 border-black rounded-xl shadow-retro hover:shadow-retro-hover transition-shadow duration-200 overflow-hidden;
+  }
+  
+  .retro-btn {
+    @apply bg-accent-amber text-black font-bold border-2 border-black rounded-lg px-4 py-2 hover:translate-y-[2px] hover:translate-x-[2px] transition-transform shadow-retro active:shadow-none active:translate-y-[4px] active:translate-x-[4px];
+  }
+  
+  .retro-input {
+    @apply w-full bg-white border-2 border-black rounded-lg px-4 py-2 focus:outline-none focus:ring-0 focus:border-black font-medium transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:shadow-retro;
+  }
+
+  .retro-badge {
+    @apply inline-flex items-center px-2 py-1 rounded-md border-2 border-black font-bold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+}

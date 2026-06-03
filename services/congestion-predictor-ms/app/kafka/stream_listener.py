@@ -86,8 +86,32 @@ class StreamListener:
         # Simulamos que entraron 60 eventos de golpe (genera congestión)
         self.procesar_lote("Ruta-Bus-01-Sur", 60)
 
-# --- Ejecución de prueba aislada ---
+    def start(self):
+        """
+        Escucha el broker real de Kafka.
+        """
+        print(f"[*] Conectado al broker. Escuchando tópico: {TOPIC_GPS}")
+        try:
+            for message in self.consumer:
+                payload = message.value
+                # Extraemos los datos del bus
+                route_id = payload.get('route_id', 'unknown')
+                volumen = payload.get('volume', 0) # Asumimos que el JSON trae 'volume'
+                
+                # Procesamos el evento real
+                self.procesar_lote(route_id, volumen)
+        except Exception as e:
+            print(f"[!] Error en la conexión con Kafka: {e}")
+
+# --- Ejecución ---
 if __name__ == "__main__":
-    # Arrancamos en modo simulación para saltar el error de red de Kafka
-    listener = StreamListener(simulation_mode=True)
-    listener.run_simulation()
+    app_mode = os.environ.get('APP_MODE', 'development')
+    
+    if app_mode == 'production':
+        print(">>> Iniciando en MODO PRODUCCIÓN (Conectando a Kafka real)...")
+        listener = StreamListener(simulation_mode=False)
+        listener.start()  # <--- AQUÍ ESTÁ EL CAMBIO: Llamamos al método start()
+    else:
+        print(">>> Iniciando en MODO SIMULACIÓN...")
+        listener = StreamListener(simulation_mode=True)
+        listener.run_simulation()

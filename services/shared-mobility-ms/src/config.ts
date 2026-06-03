@@ -1,16 +1,20 @@
 // config.ts — Variables de entorno para shared-mobility-ms.
-// Credenciales de MongoDB Atlas (documentos) y Upstash Redis (bloqueos distribuidos).
+import dotenv = require('dotenv');
+import path = require('path');
 
-export interface Config {
+// MODIFICACIÓN CRÍTICA: Forzar la ruta absoluta hacia el archivo .env de la carpeta actual
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// DEFINICIÓN DE TIPOS: No lleva la palabra clave 'export' al inicio
+interface Config {
   port: number;
   mongoUri: string;
   redisUrl: string;
   redisToken: string;
-  // TTL del bloqueo Redis para reservas: 60 segundos según especificación
   reservationLockTtlMs: number;
 }
 
-export function loadConfig(): Config {
+function loadConfig(): Config {
   return {
     port: parseInt(process.env.MOBILITY_PORT ?? '3000', 10),
     mongoUri: requireEnv('MONGODB_URI'),
@@ -28,3 +32,10 @@ function requireEnv(key: string): string {
   if (!value) throw new Error(`Variable de entorno requerida: ${key}`);
   return value;
 }
+
+// MODIFICACIÓN DE EXPORTACIÓN: Formato CommonJS puro compatible con verbatimModuleSyntax
+const configExports = {
+  loadConfig
+};
+
+export = configExports;

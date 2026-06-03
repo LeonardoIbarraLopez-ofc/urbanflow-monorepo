@@ -1,3 +1,6 @@
+// Métodos de pago aceptados por unified-payment-ms
+export type PaymentMethod = 'NFC_CARD' | 'MOBILE_APP' | 'QR_CODE';
+
 export interface Transaction {
   id: string;
   date: string;

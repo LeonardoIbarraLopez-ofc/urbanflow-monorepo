@@ -38,15 +38,67 @@ func NewHandler(producer *kafka.Producer) *Handler {
 	return &Handler{producer: producer}
 }
 
+// SimulatedGPSRequest es la estructura enviada por el simulador del frontend.
+type SimulatedGPSRequest struct {
+	BusID    string  `json:"bus_id"`
+	Lat      float64 `json:"lat"`
+	Lng      float64 `json:"lng"`
+	SpeedKmh float32 `json:"speed_kmh"`
+}
+
 // HTTPMux retorna el router HTTP con los endpoints de ingesta.
-func (h *Handler) HTTPMux() *http.ServeMux {
+func (h *Handler) HTTPMux() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /telemetry", h.handleHTTP)
+	mux.HandleFunc("POST /v1/simulate/gps", h.handleSimulateGPS)
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
-	return mux
+	return enableCORS(mux)
+}
+
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// handleSimulateGPS procesa telemetría GPS simulada desde el frontend.
+func (h *Handler) handleSimulateGPS(w http.ResponseWriter, r *http.Request) {
+	var req SimulatedGPSRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "payload inválido", http.StatusBadRequest)
+		return
+	}
+
+	payload := GPSPayload{
+		VehicleID:  req.BusID,
+		RouteID:    "ROUTE-DEFAULT", // default required route
+		Latitude:   req.Lat,
+		Longitude:  req.Lng,
+		SpeedKmh:   req.SpeedKmh,
+		Bearing:    0,
+		RecordedAt: time.Now().UTC(),
+	}
+
+	if err := validate(payload); err != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Publicar de forma asíncrona; no bloquea la respuesta HTTP
+	go h.producer.Publish(payload.VehicleID, payload)
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // handleHTTP procesa telemetría GPS en formato JSON vía HTTP.

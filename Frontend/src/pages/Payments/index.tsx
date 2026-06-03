@@ -55,7 +55,7 @@ export const Payments = () => {
                  <div>
                    <p className="text-gray-400 font-bold mb-1">Saldo Disponible</p>
                    <h2 className="text-5xl md:text-6xl font-black font-mono tracking-tighter text-white">
-                     <span className="text-accent-green">$</span>{balance.toFixed(2)}
+                     <span className="text-accent-green">$</span>{(balance ?? 0).toFixed(2)}
                    </h2>
                  </div>
                </div>

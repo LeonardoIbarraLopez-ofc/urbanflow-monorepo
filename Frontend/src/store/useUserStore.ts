@@ -10,8 +10,8 @@ interface UserState {
 }
 
 export const useUserStore = create<UserState>((set) => ({
-  userId: 'USR-1337', // Default user id for the hackathon
-  balance: 10.50, // Starting balance
+  userId: '11111111-1111-1111-1111-111111111111', // account_id real de Supabase (cuenta de prueba Dev 2)
+  balance: 50.00, // Saldo inicial real de la cuenta
   activeTrip: null,
   setBalance: (balance) => set({ balance }),
   setActiveTrip: (activeTrip) => set({ activeTrip }),

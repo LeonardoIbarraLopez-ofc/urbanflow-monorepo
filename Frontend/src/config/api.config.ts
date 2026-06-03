@@ -3,7 +3,7 @@
 export const API_CONFIG = {
   TELEMETRY: import.meta.env.VITE_TELEMETRY_MS_URL || 'http://localhost:3001',
   ROUTING: import.meta.env.VITE_ROUTING_MS_URL || 'http://localhost:3002',
-  PAYMENT: import.meta.env.VITE_PAYMENT_MS_URL || 'http://localhost:3003',
+  PAYMENT: import.meta.env.VITE_PAYMENT_MS_URL || '/api',
   SCOOTER: import.meta.env.VITE_SCOOTER_MS_URL || 'http://localhost:3004',
   PREDICTOR: import.meta.env.VITE_PREDICTOR_MS_URL || 'http://localhost:3005',
   NOTIFICATION_WS: import.meta.env.VITE_NOTIFICATION_WS_URL || 'ws://localhost:3006',

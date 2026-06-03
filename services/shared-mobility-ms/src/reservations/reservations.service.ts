@@ -1,16 +1,12 @@
 // reservations.service.ts — Lógica de reserva con bloqueo distribuido Redis.
-// Implementa el patrón SET NX PX para evitar reservas concurrentes del mismo scooter.
-// Validación 2.2: dos usuarios simultáneos → solo el primero obtiene el lock; el segundo recibe rechazo.
-//
-// Flujo:
-//   1. SET resource:device_id "user_id" NX PX 60000
-//   2. Si OK → actualizar MongoDB con status='reserved'
-//   3. Si null → el dispositivo ya está reservado por otro usuario
+import upstashRedis = require('@upstash/redis');
+const { Redis } = upstashRedis;
 
-import { Redis } from '@upstash/redis';
+// MODIFICACIÓN: Importación de tipos estáticos para cumplir con verbatimModuleSyntax
+import type { Redis as RedisType } from '@upstash/redis';
 
-export class ReservationsService {
-  private redis: Redis;
+class ReservationsService {
+  private redis: RedisType;
 
   constructor(redisUrl: string, redisToken: string) {
     this.redis = new Redis({ url: redisUrl, token: redisToken });
@@ -19,7 +15,6 @@ export class ReservationsService {
   /**
    * Intenta reservar el dispositivo para el usuario.
    * Retorna true si la reserva fue exitosa, false si ya estaba tomada.
-   * El bloqueo expira automáticamente en 60 segundos (TTL) si el usuario no confirma.
    */
   async reserve(deviceId: string, userId: string): Promise<boolean> {
     const lockKey = `resource:${deviceId}`;
@@ -31,7 +26,7 @@ export class ReservationsService {
       px: lockTtlMs, // Expiración en milisegundos
     });
 
-    // 'OK' = lock adquirido; null = ya existía (otro usuario tiene el lock)
+    // '@upstash/redis' devuelve 'OK' si se creó la clave, o null si ya existía
     return result === 'OK';
   }
 
@@ -40,3 +35,10 @@ export class ReservationsService {
     await this.redis.del(`resource:${deviceId}`);
   }
 }
+
+// MODIFICACIÓN: Exportación CommonJS pura compatible con el linter del monorepo
+const serviceExports = {
+  ReservationsService
+};
+
+export = serviceExports;

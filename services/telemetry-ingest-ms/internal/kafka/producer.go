@@ -55,14 +55,15 @@ func NewProducer(cfg *config.Config) (*Producer, error) {
 	return p, nil
 }
 
-// Publish serializa el payload y lo encola para publicación asíncrona.
-func (p *Producer) Publish(payload interface{}) {
+// Publish serializa el payload y lo encola para publicación asíncrona usando una clave.
+func (p *Producer) Publish(key string, payload interface{}) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Error serializando payload: %v", err)
 		return
 	}
 	p.queue <- kafka.Message{
+		Key:   []byte(key),
 		Value: data,
 		Time:  time.Now(),
 	}

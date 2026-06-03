@@ -8,6 +8,7 @@ package ingest
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -60,7 +61,7 @@ func (h *Handler) handleHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Publicar de forma asíncrona; no bloquea la respuesta HTTP
-	go h.producer.Publish(payload)
+	go h.producer.Publish(payload.VehicleID, payload)
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -89,7 +90,7 @@ func (h *Handler) ListenUDP(port string) error {
 			log.Printf("Payload UDP inválido desde %v: %v", remoteAddr, err)
 			continue
 		}
-		go h.producer.Publish(payload)
+		go h.producer.Publish(payload.VehicleID, payload)
 	}
 }
 

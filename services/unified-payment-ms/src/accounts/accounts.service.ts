@@ -26,12 +26,26 @@ export class AccountsService {
    * Recarga saldo en la cuenta del ciudadano.
    * La actualización se hace dentro de una transacción ACID para garantizar consistencia.
    */
-  async recharge(accountId: string, amount: number): Promise<Account> {
-    const account = await this.accountsRepo.findOne({
-      where: { account_id: accountId },
-    });
-    if (!account) throw new NotFoundException(`Cuenta ${accountId} no encontrada`);
-    account.balance = Number(account.balance) + amount;
-    return this.accountsRepo.save(account);
-  }
+  async recharge(accountId: string, amount: number) {
+  const account = await this.accountsRepo.findOne({
+    where: { account_id: accountId },
+  });
+  if (!account) throw new NotFoundException(`Cuenta ${accountId} no encontrada`);
+
+  // Calculamos el nuevo saldo de forma segura asegurando el tipo numérico
+  const nuevoSaldo = Number(account.balance) + amount;
+  account.balance = nuevoSaldo;
+  
+  // Guardamos en la base de datos
+  await this.accountsRepo.save(account);
+
+  // Retornamos un objeto limpio y explícito para evitar el bug del RETURNING de TypeORM
+  return {
+    account_id: account.account_id,
+    user_id: account.user_id,
+    balance: nuevoSaldo,
+    currency: account.currency,
+    status: 'SUCCESS'
+  };
+}
 }

@@ -1,19 +1,23 @@
-// payments.module.ts — Módulo NestJS para el sistema de cobros multimodales ACID.
-// Registra PaymentTransaction con TypeORM e importa AccountsModule para validar saldos.
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PaymentTransaction } from './entities/transaction.entity';
-import { AccountsModule } from '../accounts/accounts.module';
+
+// Importaciones del Ledger de Auditoría
+import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
+import { RegulatoryAuditLedger } from './entities/audit-ledger.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PaymentTransaction]),
-    AccountsModule,
+    TypeOrmModule.forFeature([
+      PaymentTransaction, 
+      RegulatoryAuditLedger
+    ])
   ],
-  controllers: [PaymentsController],
-  providers: [PaymentsService],
+  controllers: [PaymentsController, AuditController],
+  providers: [PaymentsService, AuditService],
+  exports: [PaymentsService, AuditService], // Opcional, por si otro módulo necesita inyectarlos
 })
 export class PaymentsModule {}

@@ -10,6 +10,11 @@ import {
 } from 'typeorm';
 import { PaymentTransaction } from '../../payments/entities/transaction.entity';
 
+// Objeto transformer para solucionar el bug de TypeORM + Postgres Numeric
+const numericTransformer = {
+  to: (value: number) => value,
+  from: (value: string) => value === null ? 0 : Number(value),
+};
 @Entity('accounts')
 export class Account {
   @PrimaryGeneratedColumn('uuid')
@@ -19,7 +24,7 @@ export class Account {
   user_id: string;
 
   // NUMERIC(12,2) con check constraint en DB — TypeORM sincroniza la columna pero el CHECK lo maneja la migración SQL
-  @Column({ type: 'numeric', precision: 12, scale: 2, default: 0 })
+  @Column({ type: 'numeric', precision: 12, scale: 2, default: 0, transformer: numericTransformer})
   balance: number;
 
   @Column({ type: 'varchar', length: 3, default: 'USD' })
